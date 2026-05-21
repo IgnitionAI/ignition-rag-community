@@ -6,7 +6,7 @@ Always run a backup and dry-run before applying an update:
 
 ```bash
 bun run self-hosted:backup
-bun run self-hosted:update --manifest releases/community-manifest.example.json --dry-run
+bun run self-hosted:update --manifest releases/community-manifest.json --dry-run
 ```
 
 Apply requires:

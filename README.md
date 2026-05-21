@@ -43,8 +43,8 @@ Default bootstrap credentials come from `.env`. Change
 ```bash
 bun run self-hosted:doctor
 bun run self-hosted:backup
-bun run self-hosted:update --manifest releases/community-manifest.example.json --dry-run
-bun run self-hosted:update --manifest releases/community-manifest.example.json --apply
+bun run self-hosted:update --manifest releases/community-manifest.json --dry-run
+bun run self-hosted:update --manifest releases/community-manifest.json --apply
 bun run self-hosted:restore --backup <backup-id> --confirm <backup-id>
 ```
 

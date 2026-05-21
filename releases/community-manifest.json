@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "edition": "community",
+  "release": {
+    "version": "2026.05.0",
+    "channel": "stable",
+    "releasedAt": "2026-05-21T10:25:42.000Z",
+    "coreVersion": "2026.05.0",
+    "extensionApiVersion": "1.0"
+  },
+  "images": {
+    "api": {
+      "repository": "ghcr.io/ignitionai/ignition-rag-api",
+      "tag": "2026.05.0",
+      "digest": "sha256:9dc66217bb1fd7881a71f157e94f528b510b64445d064734382e68d87cefcc12"
+    },
+    "front": {
+      "repository": "ghcr.io/ignitionai/ignition-rag-front",
+      "tag": "2026.05.0",
+      "digest": "sha256:81ded9b0ac7be8b2d99cb3b3ea80f45ed72fee44de8179e91fa131551a7a1554"
+    },
+    "crawler": {
+      "repository": "ghcr.io/ignitionai/ignition-rag-crawler",
+      "tag": "2026.05.0",
+      "digest": "sha256:0dc96fe8f7590c9e515e9c8b80f26608c182f52714e4be5b5fe6554a482755e1"
+    },
+    "document-extractor": {
+      "repository": "ghcr.io/ignitionai/ignition-rag-document-extractor",
+      "tag": "2026.05.0",
+      "digest": "sha256:00d6dd9be6145dcbcca16fa6730daf8e78436604a49ee051f168ca95f3ea82d7"
+    }
+  },
+  "migrations": {
+    "from": "previous",
+    "to": "2026.05.0",
+    "requiresBackup": true
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "value": "cf3EHTkOsp8KFp4mVUbd4JifeF5wB+wuU+LIzvRq4NrqgKTvU/T7oCG6fwYKjXSoepjpRuq50Pd+o9HDHQeZAQ=="
+  }
+}
