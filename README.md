@@ -100,7 +100,7 @@ under `scripts/` and can be run directly with `python3`.
 1. Clone and enter the repository.
 
 ```bash
-git clone https://github.com/salim4n/ignition-rag-community.git
+git clone https://github.com/ignitionai/ignition-rag-community.git
 cd ignition-rag-community
 ```
 
