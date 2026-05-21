@@ -394,10 +394,11 @@ Set `ENCRYPTION_KEY` in `.env` to at least 32 characters.
 `bun run self-hosted:smoke` cannot log in.
 
 Check `SELF_HOSTED_BOOTSTRAP_EMAIL` and `SELF_HOSTED_BOOTSTRAP_PASSWORD` in
-`.env`, then restart the API service:
+`.env`, then recreate the bootstrap and API services:
 
 ```bash
-docker compose up -d api
+docker compose up -d --force-recreate migrate api
+docker compose up -d nginx
 ```
 
 `--apply` is blocked because a backup is missing.

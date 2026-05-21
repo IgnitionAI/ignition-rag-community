@@ -55,6 +55,15 @@ services:
       AUTH_PROVIDER: ${AUTH_PROVIDER}
       BILLING_PROVIDER: ${BILLING_PROVIDER}
       EMAIL_PROVIDER: ${EMAIL_PROVIDER}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SELF_HOSTED_ADMIN_USER_ID: ${SELF_HOSTED_ADMIN_USER_ID}
+      SELF_HOSTED_BOOTSTRAP_EMAIL: ${SELF_HOSTED_BOOTSTRAP_EMAIL}
+      SELF_HOSTED_BOOTSTRAP_NAME: ${SELF_HOSTED_BOOTSTRAP_NAME}
+      SELF_HOSTED_BOOTSTRAP_PASSWORD: ${SELF_HOSTED_BOOTSTRAP_PASSWORD}
+      SELF_HOSTED_ORG_ID: ${SELF_HOSTED_ORG_ID}
+      SELF_HOSTED_ORG_NAME: ${SELF_HOSTED_ORG_NAME}
+      SELF_HOSTED_ORG_SLUG: ${SELF_HOSTED_ORG_SLUG}
+      LOCAL_SESSION_TTL_SECONDS: ${LOCAL_SESSION_TTL_SECONDS}
       DATABASE_URL: ${DATABASE_URL}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       JINA_API_KEY: ${JINA_API_KEY}
@@ -82,11 +91,59 @@ services:
       retries: 5
       start_period: 40s
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       qdrant:
-        condition: service_healthy
+        condition: service_started
       minio:
+        condition: service_healthy
+    networks:
+      - ignition-rag
+
+  migrate:
+    image: ${IGNITION_API_IMAGE}
+    platform: ${IGNITION_IMAGE_PLATFORM:-linux/amd64}
+    restart: "no"
+    command: ["sh", "-lc", "bun run db:push --force && bun run scripts/self-hosted/bootstrap-admin.ts"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DEPLOYMENT_MODE: ${DEPLOYMENT_MODE}
+      IGNITION_EDITION: ${IGNITION_EDITION}
+      AUTH_PROVIDER: ${AUTH_PROVIDER}
+      BILLING_PROVIDER: ${BILLING_PROVIDER}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SELF_HOSTED_ADMIN_USER_ID: ${SELF_HOSTED_ADMIN_USER_ID}
+      SELF_HOSTED_BOOTSTRAP_EMAIL: ${SELF_HOSTED_BOOTSTRAP_EMAIL}
+      SELF_HOSTED_BOOTSTRAP_NAME: ${SELF_HOSTED_BOOTSTRAP_NAME}
+      SELF_HOSTED_BOOTSTRAP_PASSWORD: ${SELF_HOSTED_BOOTSTRAP_PASSWORD}
+      SELF_HOSTED_ORG_ID: ${SELF_HOSTED_ORG_ID}
+      SELF_HOSTED_ORG_NAME: ${SELF_HOSTED_ORG_NAME}
+      SELF_HOSTED_ORG_SLUG: ${SELF_HOSTED_ORG_SLUG}
+      LOCAL_SESSION_TTL_SECONDS: ${LOCAL_SESSION_TTL_SECONDS}
+      DATABASE_URL: ${DATABASE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      JINA_API_KEY: ${JINA_API_KEY}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER}
+      QDRANT_URL: ${QDRANT_URL}
+      QDRANT_PUBLIC_URL: ${QDRANT_PUBLIC_URL}
+      QDRANT_LOCAL: ${QDRANT_LOCAL}
+      S3_ENABLED: ${S3_ENABLED}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_BUCKET: ${S3_BUCKET}
+      CRAWLER_SERVICE_URL: http://crawler:8000
+      DOCUMENT_EXTRACTOR_URL: http://document-extractor:8010
+    depends_on:
+      postgres:
         condition: service_healthy
     networks:
       - ignition-rag

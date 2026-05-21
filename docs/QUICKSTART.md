@@ -38,6 +38,9 @@ docker compose up -d
 bun run self-hosted:smoke
 ```
 
+The `migrate` service applies the current schema and bootstraps the local admin
+user before the API starts.
+
 ## 4. Open
 
 ```text
