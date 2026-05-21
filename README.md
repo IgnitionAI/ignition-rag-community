@@ -269,6 +269,7 @@ Extensions should include an `ignition-extension.json` manifest:
 
 ```json
 {
+  "id": "customer-theme",
   "name": "customer-theme",
   "type": "theme",
   "version": "1.0.0",
@@ -276,9 +277,14 @@ Extensions should include an `ignition-extension.json` manifest:
     "minCore": "2026.05.0",
     "maxCore": "2026.12.0",
     "extensionApi": "1.0"
-  }
+  },
+  "hooks": [{ "name": "theme.tokens" }]
 }
 ```
+
+V1 extension hooks are explicit and declarative. Community does not execute
+arbitrary plugin code. Supported hooks are `admin.diagnostics.card`,
+`theme.tokens`, and `customConnector.registry`.
 
 More details: [docs/CUSTOMIZATION.md](docs/CUSTOMIZATION.md).
 

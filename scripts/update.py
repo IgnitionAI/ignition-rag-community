@@ -7,6 +7,18 @@ import subprocess
 
 from common import ROOT, compose_with_release, latest_backup, load_json, print_check, read_env
 
+EXTENSION_ROOT_TYPES = {
+    "plugins": "plugin",
+    "themes": "theme",
+    "custom-connectors": "custom-connector",
+}
+
+SUPPORTED_EXTENSION_HOOKS = {
+    "plugin": {"admin.diagnostics.card"},
+    "theme": {"theme.tokens"},
+    "custom-connector": {"customConnector.registry"},
+}
+
 
 def validate_manifest(path: pathlib.Path, *, strict: bool) -> tuple[dict, list[tuple[str, str, str]]]:
     checks: list[tuple[str, str, str]] = []
@@ -57,14 +69,63 @@ def compare_versions(left: str, right: str) -> int:
     return (left_parts > right_parts) - (left_parts < right_parts)
 
 
+def hook_name(value: object) -> str | None:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict) and isinstance(value.get("name"), str):
+        return str(value["name"])
+    return None
+
+
+def validate_extension_surface(root_name: str, manifest_path: pathlib.Path, extension: dict) -> list[str]:
+    invalid: list[str] = []
+    expected_type = EXTENSION_ROOT_TYPES[root_name]
+    extension_type = extension.get("type")
+    extension_name = str(extension.get("name") or manifest_path.parent.name)
+
+    if extension_type != expected_type:
+        invalid.append(f"{manifest_path.relative_to(ROOT)}: type must be {expected_type}")
+
+    allowed_hooks = SUPPORTED_EXTENSION_HOOKS.get(str(extension_type), set())
+    for hook in extension.get("hooks", []):
+        name = hook_name(hook)
+        if not name:
+            invalid.append(f"{manifest_path.relative_to(ROOT)}: invalid hook declaration")
+        elif name not in allowed_hooks:
+            invalid.append(f"{manifest_path.relative_to(ROOT)}: unsupported hook {name}")
+
+    if extension_type == "custom-connector":
+        connector = extension.get("connector")
+        if not isinstance(connector, dict):
+            invalid.append(f"{manifest_path.relative_to(ROOT)}: custom connector declaration missing")
+        else:
+            if not connector.get("id"):
+                invalid.append(f"{manifest_path.relative_to(ROOT)}: connector.id is required")
+            if not connector.get("name"):
+                invalid.append(f"{manifest_path.relative_to(ROOT)}: connector.name is required")
+            protocol = connector.get("protocol", "custom")
+            if protocol not in {"http", "mcp", "webhook", "custom"}:
+                invalid.append(f"{manifest_path.relative_to(ROOT)}: connector.protocol {protocol} is unsupported")
+
+    if extension_type not in SUPPORTED_EXTENSION_HOOKS:
+        invalid.append(f"{manifest_path.relative_to(ROOT)}: unsupported extension type for {extension_name}")
+    return invalid
+
+
 def validate_extensions(release: dict) -> tuple[str, str, str]:
     core_version = str(release.get("coreVersion") or release.get("version") or "")
     extension_api = str(release.get("extensionApiVersion") or "")
     invalid: list[str] = []
     checked = 0
-    for root_name in ["plugins", "themes", "custom-connectors"]:
+    for root_name in EXTENSION_ROOT_TYPES:
         root = ROOT / root_name
-        for manifest_path in root.rglob("ignition-extension.json"):
+        if not root.exists():
+            continue
+        for extension_dir in sorted(path for path in root.iterdir() if path.is_dir()):
+            manifest_path = extension_dir / "ignition-extension.json"
+            if not manifest_path.exists():
+                invalid.append(f"{extension_dir.relative_to(ROOT)}: missing ignition-extension.json")
+                continue
             checked += 1
             try:
                 extension = load_json(manifest_path)
@@ -84,6 +145,7 @@ def validate_extensions(release: dict) -> tuple[str, str, str]:
                 invalid.append(f"{manifest_path.relative_to(ROOT)}: minCore {min_core} > {core_version}")
             if max_core and compare_versions(core_version, str(max_core)) > 0:
                 invalid.append(f"{manifest_path.relative_to(ROOT)}: maxCore {max_core} < {core_version}")
+            invalid.extend(validate_extension_surface(root_name, manifest_path, extension))
     if invalid:
         return ("FAIL", "extensions", "; ".join(invalid))
     return ("PASS", "extensions", f"{checked} manifest(s) compatible")
