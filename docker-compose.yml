@@ -16,6 +16,7 @@ services:
 
   front:
     image: ${IGNITION_FRONT_IMAGE}
+    platform: ${IGNITION_IMAGE_PLATFORM:-linux/amd64}
     restart: unless-stopped
     expose:
       - "3000"
@@ -39,6 +40,7 @@ services:
 
   api:
     image: ${IGNITION_API_IMAGE}
+    platform: ${IGNITION_IMAGE_PLATFORM:-linux/amd64}
     restart: unless-stopped
     expose:
       - "3001"
@@ -91,6 +93,7 @@ services:
 
   crawler:
     image: ${IGNITION_CRAWLER_IMAGE}
+    platform: ${IGNITION_IMAGE_PLATFORM:-linux/amd64}
     restart: unless-stopped
     expose:
       - "8000"
@@ -101,6 +104,7 @@ services:
 
   document-extractor:
     image: ${IGNITION_DOCUMENT_EXTRACTOR_IMAGE}
+    platform: ${IGNITION_IMAGE_PLATFORM:-linux/amd64}
     restart: unless-stopped
     expose:
       - "8010"

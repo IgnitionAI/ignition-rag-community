@@ -95,6 +95,10 @@ Default local ports:
 Bun is only used as a script runner in this repository. Every script also lives
 under `scripts/` and can be run directly with `python3`.
 
+Official Community images are published as `linux/amd64` in V1. Docker Desktop
+on Apple Silicon runs them through emulation by default with
+`IGNITION_IMAGE_PLATFORM=linux/amd64`.
+
 ## Quickstart
 
 1. Clone and enter the repository.
@@ -299,6 +303,7 @@ Core edition settings:
 | `AUTH_PROVIDER` | `local` | Uses built-in local auth. |
 | `BILLING_PROVIDER` | `none` | No Stripe or license billing. |
 | `EMAIL_PROVIDER` | `none` | No outbound email by default. |
+| `IGNITION_IMAGE_PLATFORM` | `linux/amd64` | Official Community image platform in V1. |
 
 Important operational settings:
 
@@ -377,6 +382,11 @@ packages:
 docker login ghcr.io
 ```
 
+`docker compose pull` fails with `no matching manifest for linux/arm64/v8`.
+
+Keep `IGNITION_IMAGE_PLATFORM=linux/amd64` in `.env`. The V1 Community images
+are amd64 images; Docker Desktop on Apple Silicon runs them through emulation.
+
 `bun run self-hosted:doctor` fails on `ENCRYPTION_KEY`.
 
 Set `ENCRYPTION_KEY` in `.env` to at least 32 characters.
@@ -423,5 +433,4 @@ See [LICENSE.md](LICENSE.md).
 
 Community is free to use, including in production, but resale, white-label, and
 managed-service redistribution require a separate written agreement with
-IgnitionAI. This license text is an operational draft and should be reviewed by
-counsel before a public launch.
+IgnitionAI.

@@ -19,6 +19,10 @@ Community uses:
 - `BILLING_PROVIDER=none`
 - `AUTH_PROVIDER=local`
 - `EMAIL_PROVIDER=none`
+- `IGNITION_IMAGE_PLATFORM=linux/amd64`
+
+Keep `IGNITION_IMAGE_PLATFORM=linux/amd64` on Apple Silicon. Community V1
+images are amd64 images and Docker Desktop runs them through emulation.
 
 ## 2. Check
 
@@ -29,6 +33,7 @@ bun run self-hosted:doctor
 ## 3. Start
 
 ```bash
+docker compose pull
 docker compose up -d
 bun run self-hosted:smoke
 ```
