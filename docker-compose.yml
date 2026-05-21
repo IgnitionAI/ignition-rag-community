@@ -1,0 +1,176 @@
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      front:
+        condition: service_healthy
+    networks:
+      - ignition-rag
+
+  front:
+    image: ${IGNITION_FRONT_IMAGE}
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: production
+      DEPLOYMENT_MODE: ${DEPLOYMENT_MODE}
+      IGNITION_EDITION: ${IGNITION_EDITION}
+      AUTH_PROVIDER: ${AUTH_PROVIDER}
+      NEXT_PUBLIC_DEPLOYMENT_MODE: ${DEPLOYMENT_MODE}
+      NEXT_PUBLIC_IGNITION_EDITION: ${IGNITION_EDITION}
+      NEXT_PUBLIC_AUTH_PROVIDER: ${AUTH_PROVIDER}
+      NEXT_PUBLIC_API_URL: http://localhost
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/').then(()=>process.exit(0)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - ignition-rag
+
+  api:
+    image: ${IGNITION_API_IMAGE}
+    restart: unless-stopped
+    expose:
+      - "3001"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DEPLOYMENT_MODE: ${DEPLOYMENT_MODE}
+      IGNITION_EDITION: ${IGNITION_EDITION}
+      AUTH_PROVIDER: ${AUTH_PROVIDER}
+      BILLING_PROVIDER: ${BILLING_PROVIDER}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER}
+      DATABASE_URL: ${DATABASE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      JINA_API_KEY: ${JINA_API_KEY}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER}
+      QDRANT_URL: ${QDRANT_URL}
+      QDRANT_PUBLIC_URL: ${QDRANT_PUBLIC_URL}
+      QDRANT_LOCAL: ${QDRANT_LOCAL}
+      S3_ENABLED: ${S3_ENABLED}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_BUCKET: ${S3_BUCKET}
+      CRAWLER_SERVICE_URL: http://crawler:8000
+      DOCUMENT_EXTRACTOR_URL: http://document-extractor:8010
+    volumes:
+      - ./plugins:/app/plugins:ro
+      - ./themes:/app/themes:ro
+      - ./custom-connectors:/app/custom-connectors:ro
+      - ./releases:/app/releases:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - ignition-rag
+
+  crawler:
+    image: ${IGNITION_CRAWLER_IMAGE}
+    restart: unless-stopped
+    expose:
+      - "8000"
+    environment:
+      PORT: 8000
+    networks:
+      - ignition-rag
+
+  document-extractor:
+    image: ${IGNITION_DOCUMENT_EXTRACTOR_IMAGE}
+    restart: unless-stopped
+    expose:
+      - "8010"
+    environment:
+      PORT: 8010
+      MAX_CONCURRENT_EXTRACTIONS: 1
+      MAX_UPLOAD_BYTES: 62914560
+      MAX_TEXT_CHARS: 8388608
+      OCR_LANG: fr
+    networks:
+      - ignition-rag
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ignition-rag
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.1
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+      - qdrant_snapshots:/qdrant/snapshots
+    networks:
+      - ignition-rag
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ignition-rag
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  qdrant_snapshots:
+  minio_data:
+
+networks:
+  ignition-rag:
+    driver: bridge

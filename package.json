@@ -1,0 +1,12 @@
+{
+  "name": "@ignitionai/ignition-rag-community",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "self-hosted:doctor": "python3 scripts/doctor.py",
+    "self-hosted:backup": "python3 scripts/backup.py",
+    "self-hosted:update": "python3 scripts/update.py",
+    "self-hosted:restore": "python3 scripts/restore.py",
+    "self-hosted:smoke": "python3 scripts/smoke.py"
+  }
+}

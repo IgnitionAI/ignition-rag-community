@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "edition": "community",
+  "release": {
+    "version": "2026.05.0",
+    "channel": "stable",
+    "releasedAt": "2026-05-21T00:00:00.000Z",
+    "coreVersion": "2026.05.0",
+    "extensionApiVersion": "1.0"
+  },
+  "images": {
+    "api": {
+      "repository": "ghcr.io/ignitionai/ignition-rag-api",
+      "tag": "2026.05.0",
+      "digest": "sha256:replace-with-release-digest"
+    },
+    "front": {
+      "repository": "ghcr.io/ignitionai/ignition-rag-front",
+      "tag": "2026.05.0",
+      "digest": "sha256:replace-with-release-digest"
+    },
+    "crawler": {
+      "repository": "ghcr.io/ignitionai/ignition-rag-crawler",
+      "tag": "2026.05.0",
+      "digest": "sha256:replace-with-release-digest"
+    },
+    "document-extractor": {
+      "repository": "ghcr.io/ignitionai/ignition-rag-document-extractor",
+      "tag": "2026.05.0",
+      "digest": "sha256:replace-with-release-digest"
+    }
+  },
+  "migrations": {
+    "from": "2026.04.0",
+    "to": "2026.05.0",
+    "requiresBackup": true
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "value": "base64-signature-over-canonical-manifest-without-signature"
+  }
+}

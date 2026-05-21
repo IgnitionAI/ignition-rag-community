@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+
+/backups/
+/.self-hosted/
+
+__pycache__/
+*.py[cod]
+
+.DS_Store
+Thumbs.db

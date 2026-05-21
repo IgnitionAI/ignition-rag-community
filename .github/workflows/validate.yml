@@ -1,0 +1,21 @@
+name: Validate Community Distribution
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose config
+        run: docker compose --env-file .env.example config >/tmp/compose.yml
+      - name: Run distribution doctor
+        run: python3 scripts/doctor.py
+      - name: Validate Python scripts
+        run: python3 -m py_compile scripts/*.py
+      - name: Validate example update dry run
+        run: python3 scripts/update.py --manifest releases/community-manifest.example.json --dry-run
