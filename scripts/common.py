@@ -13,10 +13,13 @@ def env_path() -> pathlib.Path:
     return ROOT / ".env"
 
 
-def read_env() -> dict[str, str]:
+def compose_env_file() -> pathlib.Path:
     path = env_path()
-    if not path.exists():
-        path = ROOT / ".env.example"
+    return path if path.exists() else ROOT / ".env.example"
+
+
+def read_env() -> dict[str, str]:
+    path = compose_env_file()
     values: dict[str, str] = {}
     for line in path.read_text().splitlines():
         line = line.strip()
@@ -40,7 +43,7 @@ def backup_dir() -> pathlib.Path:
 
 def compose(args: list[str], *, capture: bool = False, check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["docker", "compose", *args],
+        ["docker", "compose", "--env-file", str(compose_env_file()), *args],
         cwd=ROOT,
         text=True,
         capture_output=capture,
@@ -50,7 +53,17 @@ def compose(args: list[str], *, capture: bool = False, check: bool = True) -> su
 
 def compose_with_release(args: list[str], *, capture: bool = False, check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["docker", "compose", "-f", "docker-compose.yml", "-f", ".self-hosted/docker-compose.release.yml", *args],
+        [
+            "docker",
+            "compose",
+            "--env-file",
+            str(compose_env_file()),
+            "-f",
+            "docker-compose.yml",
+            "-f",
+            ".self-hosted/docker-compose.release.yml",
+            *args,
+        ],
         cwd=ROOT,
         text=True,
         capture_output=capture,

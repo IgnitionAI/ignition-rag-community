@@ -7,7 +7,7 @@ import pathlib
 import subprocess
 import urllib.request
 
-from common import ROOT, backup_dir, compose, print_check, read_env
+from common import ROOT, backup_dir, compose, compose_env_file, print_check, read_env
 
 
 def sha256(path: pathlib.Path) -> str:
@@ -27,7 +27,8 @@ def container_id(service: str) -> str:
 
 
 env = read_env()
-backup_id = "ignition-" + dt.datetime.now(dt.UTC).isoformat().replace("+00:00", "Z").replace(":", "-").replace(".", "-")
+now = dt.datetime.now(dt.timezone.utc)
+backup_id = "ignition-" + now.isoformat().replace("+00:00", "Z").replace(":", "-").replace(".", "-")
 target = backup_dir() / backup_id
 target.mkdir(parents=True, exist_ok=False)
 
@@ -42,7 +43,7 @@ git_revision = subprocess.run(
 ).stdout.strip()
 
 compose_services = subprocess.run(
-    ["docker", "compose", "--env-file", ".env.example", "config", "--services"],
+    ["docker", "compose", "--env-file", str(compose_env_file()), "config", "--services"],
     cwd=ROOT,
     text=True,
     capture_output=True,
@@ -54,7 +55,21 @@ postgres_db = env.get("POSTGRES_DB", "ignitionai")
 postgres_dump = target / "postgres.dump"
 with postgres_dump.open("wb") as out:
     subprocess.run(
-        ["docker", "compose", "exec", "-T", "postgres", "pg_dump", "-U", postgres_user, "-d", postgres_db, "-Fc"],
+        [
+            "docker",
+            "compose",
+            "--env-file",
+            str(compose_env_file()),
+            "exec",
+            "-T",
+            "postgres",
+            "pg_dump",
+            "-U",
+            postgres_user,
+            "-d",
+            postgres_db,
+            "-Fc",
+        ],
         cwd=ROOT,
         stdout=out,
         check=True,
@@ -108,7 +123,7 @@ checksums = {str(path.relative_to(target)): sha256(path) for path in target.rglo
 (target / "manifest.json").write_text(json.dumps({
     "schemaVersion": 1,
     "id": backup_id,
-    "createdAt": dt.datetime.now(dt.UTC).isoformat(),
+    "createdAt": dt.datetime.now(dt.timezone.utc).isoformat(),
     "distributionRevision": git_revision or None,
     "version": env.get("IGNITION_VERSION"),
     "providers": {
